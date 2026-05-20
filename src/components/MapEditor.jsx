@@ -5,7 +5,7 @@ import CpEditor from './CpEditor'
 import {
   SCALES, scaleLabel, scaleWarning, printBounds,
   CP_SYMBOL, CP_LABEL, USAGE_LABEL, renumberCps, parseCsv, parseGeoJSON, PAPER_SIZES,
-  calcStraightDistance,
+  calcStraightDistance, toMCP,
 } from '../utils'
 
 const GSI_TILES = {
@@ -719,6 +719,20 @@ export default function MapEditor({ state, setState, onNext }) {
                   <button className="btn btn-danger btn-sm"
                     onClick={clearGpx}>✕ GPXクリア</button>
                 )}
+                <button className="btn btn-secondary btn-sm"
+                  disabled={state.cps.length === 0}
+                  title="OSB MCP形式でエクスポート"
+                  onClick={() => {
+                    const name = state.memo?.trim() || 'コース'
+                    const mcp = toMCP(state, name)
+                    const blob = new Blob([JSON.stringify(mcp, null, 2)], { type: 'application/json' })
+                    const url = URL.createObjectURL(blob)
+                    const a = document.createElement('a')
+                    a.href = url
+                    a.download = `${name}.mcp`
+                    a.click()
+                    URL.revokeObjectURL(url)
+                  }}>📤 MCP出力</button>
               </div>
               {gpxFiles.length > 0 && (
                 <div style={{ fontSize: 11, color: '#aaa', marginTop: 4 }}>

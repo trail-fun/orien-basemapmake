@@ -59,6 +59,48 @@ export function renumberCps(cps) {
   })
 }
 
+// MCP エクスポート（OSB形式）
+export function toMCP(state, name = 'コース') {
+  const { cps } = state
+  const ordered = [
+    ...cps.filter(c => c.type === 'start'),
+    ...cps.filter(c => c.type === 'cp').sort((a, b) => (a.number ?? 0) - (b.number ?? 0)),
+    ...cps.filter(c => c.type === 'finish'),
+  ]
+  const points = ordered.map((cp, i) => {
+    const typeMap = { start: 'start', cp: 'normal', finish: 'finish' }
+    const labelMap = { start: 'S', finish: 'F' }
+    const displayLabel = cp.type === 'cp' ? String(cp.number ?? i) : labelMap[cp.type]
+    const point = {
+      id: crypto.randomUUID(),
+      type: typeMap[cp.type],
+      order: i,
+      displayLabel,
+      position: [cp.lng, cp.lat],
+      description: cp.memo ?? '',
+    }
+    if (cp.type === 'cp') {
+      point.label = { offsetDistance: 40, angle: 45, fontSize: 32 }
+    }
+    return point
+  })
+  return {
+    version: '2.0',
+    name,
+    points,
+    markerSettings: {
+      start:  { radius: 17, strokeWidth: 2.5 },
+      normal: { radius: 20, strokeWidth: 2.5 },
+      finish: { radius: 20, strokeWidth: 2.5 },
+      routeWidth: 6,
+      markerColor: '#dc2626',
+      labelColor:  '#dc2626',
+      routeColor:  '#dc2626',
+      routeVisible: true,
+    },
+  }
+}
+
 // GeoJSON エクスポート
 export function toGeoJSON(state) {
   const { cps, paperSize, orientation, scale, memo } = state
